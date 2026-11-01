@@ -2306,23 +2306,23 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
   ' float far=exp(-max(dx,0.)*1.4);',
   ' float t=u_t;',
   /* heat haze: rising, wavering offsets, strongest just outside the doorway */
-  ' vec2 q=uv*vec2(7.,11.);',
+  ' vec2 q=uv*vec2(16.,26.);',
   ' vec2 w=vec2(fbm(q+vec2(-t*.22*u_dir,t*.45)),fbm(q+vec2(3.7,8.1)+vec2(t*.18,t*.38)))-.5;',
   ' float haze=beam*(.35+.65*far)*u_amp;',
-  ' vec2 uv2=clamp(uv+w*.0085*haze,.002,.998);',
+  ' vec2 uv2=clamp(uv+w*.0028*haze,.002,.998);',
   ' vec3 c=texture2D(u_tex,uv2).rgb;',
   /* shafts: angular streaks from the door that drift and swell */
   ' float ang=atan(d.y,max(dx,0.)+.22);',  /* source sits behind the door, so the shafts come through the opening */
-  ' float r1=fbm(vec2(ang*11.,t*.12));float r2=fbm(vec2(ang*26.+5.,-t*.09));',
-  ' float rays=pow(clamp(r1*.65+r2*.5,0.,1.),2.4)*beam*(.25+.75*far);',
-  ' float breath=.5+.5*sin(t*.9)+.15*sin(t*2.3);',
+  ' float r1=fbm(vec2(ang*6.,t*.07));float r2=fbm(vec2(ang*13.+5.,-t*.05));',
+  ' float rays=pow(clamp(r1*.6+r2*.45,0.,1.),2.)*beam*(.2+.8*far);',
+  ' float breath=.5+.5*sin(t*.6);',
   ' if(u_dir>0.){',
-  '  c+=rays*vec3(.34)*u_amp*(.75+.25*breath);',
-  '  c+=(w.x)*.05*haze;',
-  '  c*=1.+.035*breath*beam*u_amp;',
+  '  c+=rays*vec3(.1)*u_amp*(.8+.2*breath);',
+  '  c+=(w.x)*.012*haze;',
+  '  c*=1.+.012*breath*beam*u_amp;',
   ' }else{',
-  '  c*=1.-rays*.22*u_amp;',
-  '  c-=abs(w.x)*.025*haze;',
+  '  c*=1.-rays*.07*u_amp;',
+  '  c-=abs(w.x)*.008*haze;',
   ' }',
   ' gl_FragColor=vec4(c,1.);',
   '}'].join('\n');
@@ -2381,12 +2381,12 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
       var s=Math.max(W/VW,H/VH), ox=(W-VW*s)*px, oy=(H-VH*s)*py;
       map={s:s,ox:ox,oy:oy};
       door={x:ox+d.x*s, y1:oy+d.y1*s, y2:oy+d.y2*s, s:s};
-      var n=Math.round(Math.min(150,Math.max(50,W*H/15000)));
+      var n=Math.round(Math.min(80,Math.max(30,W*H/28000)));
       motes=[]; for(var i=0;i<n;i++) motes.push(spawn(true));
     }
     function spawn(anywhere){
-      var big=Math.random()<.08;
-      return {u:anywhere?Math.random():Math.random()*.12, v:Math.random(), r:big?2.4+Math.random()*3:.5+Math.random()*1.5, big:big,
+      var big=Math.random()<.025;
+      return {u:anywhere?Math.random():Math.random()*.12, v:Math.random(), r:big?1.4+Math.random()*1.2:.4+Math.random()*1.0, big:big,
               sp:(.01+Math.random()*.028), drift:(Math.random()-.5)*.3, ph:Math.random()*6.28, tw:.5+Math.random()*2, life:0};
     }
     function at(u,v){
@@ -2397,7 +2397,7 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
     function frame(now){
       raf=0; if(!vis) return;
       var t=(now-t0)/1000, dt=Math.min(.05,(now-(frame.last||now))/1000); frame.last=now;
-      amp+=((on?1:0)-amp)*Math.min(1,dt*.6);
+      amp+=((on?1:0)-amp)*Math.min(1,dt*1.1);
       if(G){
         var drawn=G.draw({t:t,amp:amp,dir:d.dir,s:map.s,ox:map.ox,oy:map.oy,k:k,door:[d.x/VW,d.y1/VH,d.y2/VH]});
         gcv.style.opacity=drawn?1:0;
@@ -2411,9 +2411,9 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
           m.u+=m.sp*dt*(m.big?.6:1); m.v+=m.drift*dt*.08+Math.sin(t*.7+m.ph)*dt*.02; m.life=Math.min(1,m.life+dt*.6);
           if(m.u>1||m.v<-.05||m.v>1.05){ motes[i]=spawn(false); continue; }
           var p=at(m.u,m.v), inBeam=1-Math.pow(Math.abs(m.v-.5)*2,3);
-          var tw=.45+.55*Math.pow(.5+.5*Math.sin(t*m.tw+m.ph),2), al=amp*m.life*inBeam*tw*(1-m.u*.85)*(m.big?.28:.9)*(d.dir>0?1:.35);
+          var tw=.45+.55*Math.pow(.5+.5*Math.sin(t*m.tw+m.ph),2), al=amp*m.life*inBeam*tw*(1-m.u*.85)*(m.big?.18:.6)*(d.dir>0?1:.3);
           if(al<.01) continue;
-          var rr=m.r*Math.max(1,door.s*.8);
+          var rr=m.r*Math.max(1,door.s*.6);
           var mg=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],rr*(m.big?1.6:2.4));
           mg.addColorStop(0,'rgba('+col+','+al+')'); mg.addColorStop(m.big?.55:.35,'rgba('+col+','+al*.45+')'); mg.addColorStop(1,'rgba('+col+',0)');
           ctx.fillStyle=mg; ctx.fillRect(p[0]-rr*2.4,p[1]-rr*2.4,rr*4.8,rr*4.8);
@@ -2435,9 +2435,9 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
     var fired=false, g=function(){ if(!fired){ fired=true; go(); } };
     if(hv.ended||getComputedStyle(hv).display==='none') return g();
     /* start while the door finishes opening, so the air comes alive with the light */
-    hv.addEventListener('timeupdate',function(){ if(hv.duration && hv.currentTime>hv.duration-1.6) g(); });
+    hv.addEventListener('timeupdate',function(){ if(hv.duration && hv.currentTime>(hv.duration-1.6)*.5) g(); });
     hv.addEventListener('ended',g); hv.addEventListener('error',g,true);
-    setTimeout(g,8000);
+    setTimeout(g,4000);
   });
   var eod=document.querySelector('.eod'), ev=document.querySelector('.eod__video');
   scene(eod, ev, 'eod', function(go){
