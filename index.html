@@ -1204,6 +1204,9 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
 /* timeline: past years in grey, only the current year in navy — the 1px navy line and dark-grey dots read as the same colour */
 .pt-years__fill{background:var(--text-3)}
 .pt-years li.is-lit::after{background:var(--text-3)}
+/* award cards: logos sized to the card (WEB AWARD wide, GDWEB two-line) and centred in one shared logo band */
+.r-awards span{padding:clamp(18px,1.8vw,26px) clamp(18px,1.9vw,28px);border-radius:20px;gap:0}
+.r-awards .r-awards__logo,.r-awards .r-awards__logo[src*=gdweb]{width:100%;height:auto;aspect-ratio:100/23.4;object-fit:contain;object-position:left center;margin:0 0 clamp(14px,1.4vw,20px)}
 
 </style>
 </head>
@@ -1797,7 +1800,7 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
             </div>
             <div class="r-open__tb">
             <p class="r-open__role">UX/UI 기획 및 PM · 식자재 · 플랫폼 · 수상작</p>
-            <p class="r-open__lead">아워홈의 식자재 종합 플랫폼 ‘아워홈 TFS’ 리뉴얼에 참여했습니다. 다국어·반응형 프론트와 어드민을 새로 기획했습니다.</p>
+            <p class="r-open__lead">아워홈의 식자재 종합 플랫폼 ‘아워홈 TFS’ 리뉴얼에 참여했습니다.<br>다국어·반응형 프론트와 어드민을 새로 기획했습니다.</p>
             <div class="r-awards"><span><img decoding="async" class="r-awards__logo" src="assets/logos/logo-webaward.svg" alt="WEB AWARD KOREA"><b>2024 식품유통분야 대상</b></span><span><img decoding="async" class="r-awards__logo" src="assets/logos/logo-gdweb.svg" alt="GDWEB Design Awards"><b>2024 Winner Prize</b></span></div>
             </div>
           </div>
