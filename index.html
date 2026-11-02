@@ -1217,6 +1217,7 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
 .r-awards .r-awards__logo,.r-awards .r-awards__logo[src*=gdweb]{width:100%;height:auto;aspect-ratio:100/23.4;object-fit:contain;object-position:left center;margin:0 0 clamp(14px,1.4vw,20px)}
 /* living light canvas over the cover / EOD film, under the text */
 .light-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.light-fx--gl{opacity:0;transition:opacity .4s linear}
 
 </style>
 </head>
@@ -1918,7 +1919,7 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
 
 <footer class="eod is-waiting" id="contact">
   <img class="eod__light" src="assets/images/eod.webp" alt="">
-  <video class="eod__light eod__video" muted playsinline preload="auto" aria-hidden="true"><source src="assets/video/eod-scrub.mp4?v=3" type="video/mp4"><source src="assets/video/eod-scrub.webm?v=3" type="video/webm"></video>
+  <video class="eod__light eod__video" muted playsinline preload="auto" aria-hidden="true"><source src="assets/video/eod-scrub.mp4?v=4" type="video/mp4"><source src="assets/video/eod-scrub.webm?v=4" type="video/webm"></video>
   <div class="wrap eod__in">
     <p class="eod__mark">EOD</p>
     <div class="eod__bottom">
@@ -2319,8 +2320,7 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
   ' float haze=beam*(.35+.65*far)*u_amp;',
   ' vec2 uv2=clamp(uv+w*.0028*haze,.002,.998);',
   ' vec3 c=texture2D(u_tex,uv2).rgb;',
-  /* the film's near-white areas carry faint encoding streaks (strongest along the EOD's left edge): settle them to clean white */
-  ' float lum=dot(c,vec3(.299,.587,.114)); c=mix(c,vec3(1.),smoothstep(.86,.95,lum));',
+
   /* shafts: angular streaks from the door that drift and swell */
   ' float ang=atan(d.y,max(dx,0.)+.22);',  /* source sits behind the door, so the shafts come through the opening */
   ' float r1=fbm(vec2(ang*6.,t*.07));float r2=fbm(vec2(ang*13.+5.,-t*.05));',
@@ -2331,8 +2331,7 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
   '  c+=(w.x)*.012*haze;',
   '  c*=1.+.012*breath*beam*u_amp;',
   ' }else{',
-  '  c*=1.-rays*.07*u_amp;',
-  '  c-=abs(w.x)*.008*haze;',
+  /* EOD: the room is already flooded with light; any shading reads as dirt on white, so only the air shimmers */
   ' }',
   ' gl_FragColor=vec4(c,1.);',
   '}'].join('\n');
@@ -2354,10 +2353,10 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
     var ready=false, lastKey='';
     return {
       draw:function(o){
-        var src=getSrc(); if(!src){ ready=false; }
-        else{
+        var src=getSrc();
+        if(src){
           var key=src.tagName==='VIDEO'?src.currentTime+'|'+src.readyState:src.src;
-          if(key!==lastKey){ try{ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,src); ready=true; lastKey=key; }catch(e){ ready=false; } }
+          if(key!==lastKey){ try{ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,src); ready=true; lastKey=key; }catch(e){} }
         }
         gl.viewport(0,0,cv.width,cv.height);
         if(!ready){ gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT); return false; }
@@ -2376,8 +2375,8 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
     video.insertAdjacentElement('afterend',gcv); gcv.insertAdjacentElement('afterend',cv);
     var still=host.querySelector('img.hero__light,img.eod__light');
     var G=glScene(gcv,function(){
-      if(getComputedStyle(video).display!=='none' && video.readyState>=2) return video;
-      if(still && still.complete && still.naturalWidth) return still;
+      if(getComputedStyle(video).display!=='none') return video.readyState>=2 ? video : null;
+      if(still && still.complete && still.naturalWidth) return still;   /* only when the film failed and the still replaced it */
       return null;
     });
     if(!G) gcv.remove();
@@ -2410,7 +2409,7 @@ h1,h2,h3,.r-open__title,.r-feature__head h3{text-wrap:balance}
       amp+=((on?1:0)-amp)*Math.min(1,dt*1.1);
       if(G){
         var drawn=G.draw({t:t,amp:amp,dir:d.dir,s:map.s,ox:map.ox,oy:map.oy,k:k,door:[d.x/VW,d.y1/VH,d.y2/VH]});
-        gcv.style.opacity=drawn?1:0;
+        if(drawn && !gcv._shown){ gcv._shown=1; gcv.style.opacity=1; }
       }
       ctx.clearRect(0,0,W,H);
       if(amp>.002){
